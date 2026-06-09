@@ -334,10 +334,10 @@ html, body {
 }
 .insight-lbl {
   font-family: 'Cormorant SC', Georgia, serif;
-  font-size: 0.6rem; letter-spacing: 0.25em;
-  color: rgba(190,150,70,0.5); text-transform: uppercase; margin-bottom: 0.35rem;
+  font-size: 0.65rem; letter-spacing: 0.25em;
+  color: rgba(200,160,80,0.85); text-transform: uppercase; margin-bottom: 0.35rem;
 }
-.insight-text { font-size: clamp(13px,3.2vw,15px); color: rgba(210,175,120,0.8); line-height: 1.55; }
+.insight-text { font-size: clamp(14px,3.5vw,16px); color: rgba(242,218,178,0.95); line-height: 1.6; }
 
 /* ── COMPLETE ── */
 .complete-icon {
@@ -855,11 +855,13 @@ function startTimer() {
     arc.style.strokeDashoffset = C * (1 - fraction);
 
     // Halfway check-in
-    if (!ss.checkinDone && fraction <= 0.5) {
+    const halfwayMs = (ss.durationMin * 60 * 1000) / 2;
+    if (!ss.checkinDone && elapsed >= halfwayMs) {
       ss.checkinDone = true;
       clearInterval(ss.timerInterval);
+      playBowl(396, 3.5);
       notify('Threshold — Halfway', 'Are you still here with purpose?');
-      setTimeout(() => showScreen('screen-checkin'), 600);
+      setTimeout(() => showScreen('screen-checkin'), 1200);
     }
 
     // Time's up
@@ -937,11 +939,16 @@ async function renderPatterns() {
     const q = query(
       collection(db, 'sessions'),
       where('uid', '==', currentUser.uid),
-      where('createdAt', '>=', Timestamp.fromDate(since)),
-      orderBy('createdAt', 'desc')
+      where('createdAt', '>=', Timestamp.fromDate(since))
     );
     const snap = await getDocs(q);
     snap.forEach(doc => sessions.push({ id: doc.id, ...doc.data() }));
+    // sort client-side
+    sessions.sort((a,b) => {
+      const ta = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+      const tb = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+      return tb - ta;
+    });
   } catch(e) {
     weekWrap.innerHTML = '<span style="font-style:italic;color:rgba(190,150,70,0.4);font-size:0.85rem;">Could not load patterns.</span>';
     return;
