@@ -950,6 +950,7 @@ async function renderPatterns() {
       return tb - ta;
     });
   } catch(e) {
+    console.error('Firestore error:', e);
     weekWrap.innerHTML = '<span style="font-style:italic;color:rgba(190,150,70,0.4);font-size:0.85rem;">Could not load patterns.</span>';
     return;
   }
