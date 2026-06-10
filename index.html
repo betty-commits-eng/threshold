@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Threshold">
+<meta name="theme-color" content="#0a0301">
+<link rel="manifest" href="manifest.json">
 <title>Threshold</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Cormorant+SC:wght@300;400&display=swap" rel="stylesheet">
 <style>
@@ -679,6 +682,19 @@ let ss = {
 };
 const C = 2 * Math.PI * 82; // circumference ~515.2
 
+// ── SERVICE WORKER ─────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/threshold/sw.js')
+    .then(reg => console.log('SW registered:', reg.scope))
+    .catch(err => console.log('SW failed:', err));
+}
+
+function notifyServiceWorker(type, message) {
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type, message });
+  }
+}
+
 // ── AUTH ───────────────────────────────────
 onAuthStateChanged(auth, user => {
   document.getElementById('loading-screen').classList.add('hidden');
@@ -861,6 +877,7 @@ function startTimer() {
       clearInterval(ss.timerInterval);
       playBowl(396, 3.5);
       notify('Threshold — Halfway', 'Are you still here with purpose?');
+      notifyServiceWorker('TIMER_HALFWAY');
       setTimeout(() => showScreen('screen-checkin'), 1200);
     }
 
@@ -869,6 +886,7 @@ function startTimer() {
       clearInterval(ss.timerInterval);
       playBowl(528, 4);
       notify('Threshold — Time', 'Your time in ' + ss.destination + ' is complete.');
+      notifyServiceWorker('TIMER_COMPLETE', 'Your time in ' + ss.destination + ' is complete. Step back across.');
       setTimeout(() => sessionComplete(false), 800);
     }
   }, 1000);
